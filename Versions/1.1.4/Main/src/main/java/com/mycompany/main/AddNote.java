@@ -2,8 +2,6 @@ package com.mycompany.main;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.List;
 
 public class AddNote extends javax.swing.JFrame {
     private javax.swing.JButton jButtonCancel;
@@ -12,44 +10,19 @@ public class AddNote extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPaneNote;
     private javax.swing.JLabel jLabelTitle;
 
-    private int noteIndex = -1; // To track the index of the note being edited
-    private String currentUser; // The currently logged-in user
+    private int noteIndex = -1;
+    private String currentUser;
 
     public interface SaveListener {
         void onNoteSaved(String updatedNote, int noteIndex);
     }
-    
+
     private SaveListener saveListener;
-    
+
     public void setSaveListener(SaveListener listener) {
         this.saveListener = listener;
     }
-    
-    private void saveNote() {
-        String noteContent = jTextAreaNote.getText(); // Changed from jTextArea1 to jTextAreaNote
-        if (noteIndex == -1) {
-            // New note
-            if (DatabaseUtil.addNote(currentUser, noteContent)) {
-                if (saveListener != null) {
-                    saveListener.onNoteSaved(noteContent, -1);
-                }
-                JOptionPane.showMessageDialog(this, "Note saved successfully");
-            } else {
-                JOptionPane.showMessageDialog(this, "Failed to save note", "Error", JOptionPane.ERROR_MESSAGE);
-            }
-        } else {
-            // Existing note
-            if (DatabaseUtil.updateNote(currentUser, noteIndex, noteContent)) {
-                if (saveListener != null) {
-                    saveListener.onNoteSaved(noteContent, noteIndex);
-                }
-                JOptionPane.showMessageDialog(this, "Note updated successfully");
-            } else {
-                JOptionPane.showMessageDialog(this, "Failed to update note", "Error", JOptionPane.ERROR_MESSAGE);
-            }
-        }
-    }
-    
+
     public AddNote(String username) {
         this.currentUser = username;
         initComponents();
@@ -67,7 +40,7 @@ public class AddNote extends javax.swing.JFrame {
     }
 
     private void initComponents() {
-        jLabelTitle = new JLabel("Add Note");
+        jLabelTitle = new JLabel(noteIndex == -1 ? "Add New Note" : "Edit Note");
         jLabelTitle.setFont(new java.awt.Font("Arial", Font.BOLD, 18));
         jLabelTitle.setHorizontalAlignment(SwingConstants.CENTER);
 
@@ -75,7 +48,7 @@ public class AddNote extends javax.swing.JFrame {
         jButtonCancel.setFont(new java.awt.Font("Arial", Font.PLAIN, 14));
         jButtonCancel.addActionListener(this::jButtonCancelActionPerformed);
 
-        jButtonSave = new JButton("Save");
+        jButtonSave = new JButton(noteIndex == -1 ? "Save" : "Update");
         jButtonSave.setFont(new java.awt.Font("Arial", Font.PLAIN, 14));
         jButtonSave.addActionListener(this::jButtonSaveActionPerformed);
 
@@ -86,8 +59,8 @@ public class AddNote extends javax.swing.JFrame {
 
         jScrollPaneNote = new JScrollPane(jTextAreaNote);
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("Add Note");
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        setTitle(noteIndex == -1 ? "Add Note" : "Edit Note");
 
         GroupLayout layout = new GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -124,25 +97,37 @@ public class AddNote extends javax.swing.JFrame {
     }
 
     private void jButtonSaveActionPerformed(java.awt.event.ActionEvent evt) {
-        String content = jTextAreaNote.getText();
-        if (!content.isEmpty()) {
-            if (noteIndex >= 0) {
-                if (DatabaseUtil.updateNote(currentUser, noteIndex, content)) {
-                    this.dispose();
-                    new Home(currentUser).setVisible(true);
-                } else {
-                    JOptionPane.showMessageDialog(this, "Failed to update note", "Error", JOptionPane.ERROR_MESSAGE);
-                }
-            } else {
-                if (DatabaseUtil.addNote(currentUser, content)) {
-                    this.dispose();
-                    new Home(currentUser).setVisible(true);
-                } else {
-                    JOptionPane.showMessageDialog(this, "Failed to save note", "Error", JOptionPane.ERROR_MESSAGE);
-                }
+        String content = jTextAreaNote.getText().trim();
+
+        if (content.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Note cannot be empty", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        System.out.println("Attempting to save note for user: " + currentUser);
+        boolean success;
+
+        if (noteIndex == -1) {
+            success = DatabaseUtil.addNote(currentUser, content);
+            if (success && saveListener != null) {
+                saveListener.onNoteSaved(content, -1);
             }
         } else {
-            JOptionPane.showMessageDialog(this, "Note cannot be empty", "Error", JOptionPane.ERROR_MESSAGE);
+            success = DatabaseUtil.updateNote(currentUser, noteIndex, content);
+            if (success && saveListener != null) {
+                saveListener.onNoteSaved(content, noteIndex);
+            }
+        }
+
+        if (success) {
+            JOptionPane.showMessageDialog(this,
+                noteIndex == -1 ? "Note saved successfully" : "Note updated successfully");
+            this.dispose();
+            new Home(currentUser).setVisible(true);
+        } else {
+            JOptionPane.showMessageDialog(this,
+                "Failed to save note. Ensure the user exists and DB connection is working.",
+                "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 }

@@ -107,11 +107,24 @@ public class Home extends javax.swing.JFrame {
     }
 
     private void loadNotes() {
-        // Load notes from database
-        List<String> notes = DatabaseUtil.getUserNotes(currentUser);
+        // Clear existing notes
         listModel.clear();
-        for (String note : notes) {
-            listModel.addElement(note);
+
+        // Load notes from database with error handling
+        try {
+            List<String> notes = DatabaseUtil.getUserNotes(currentUser);
+            if (notes != null) {
+                for (String note : notes) {
+                    if (note != null) {
+                        listModel.addElement(note);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, 
+                "Error loading notes: " + e.getMessage(),
+                "Database Error",
+                JOptionPane.ERROR_MESSAGE);
         }
     }
 }
