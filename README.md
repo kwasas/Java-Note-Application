@@ -1,5 +1,3 @@
-Here's the complete README in plain text format that you can copy all at once:
-
 # NoteApp - README
 
 ## Overview
