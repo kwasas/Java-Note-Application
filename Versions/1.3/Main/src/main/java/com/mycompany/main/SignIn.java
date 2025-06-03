@@ -4,8 +4,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
-import java.util.HashMap;
-import java.util.Map;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class SignIn extends javax.swing.JFrame {
     private javax.swing.JButton jButton1;
@@ -29,7 +29,7 @@ public class SignIn extends javax.swing.JFrame {
         // Use rounded text field
         jTextField1 = new RoundedTextField(20);
         jTextField1.setBackground(Color.WHITE);
-        setPlaceholder(jTextField1, "Enter name or email");
+        setPlaceholder(jTextField1, "Enter username");
 
         // Use rounded password field
         jPasswordField1 = new RoundedPasswordField(20);
@@ -38,8 +38,15 @@ public class SignIn extends javax.swing.JFrame {
 
         jForgotPassword = new JLabel("Forgot password?");
         jForgotPassword.setFont(new java.awt.Font("Arial", Font.PLAIN, 12));
-        jForgotPassword.setForeground(Color.BLACK);
+        jForgotPassword.setForeground(Color.BLUE);
         jForgotPassword.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        jForgotPassword.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                SignIn.this.dispose();
+                new ForgotPassword().setVisible(true);
+            }
+        });
 
         // Use rounded button for sign in
         jButton1 = new RoundedButton("Sign In", 35);
@@ -49,7 +56,7 @@ public class SignIn extends javax.swing.JFrame {
         jButton1.addActionListener(this::jButton1ActionPerformed);
 
         // Use rounded button for create account (transparent)
-        jButton2 = new RoundedButton("Does not have an account?  Create account", 15);
+        jButton2 = new RoundedButton("Don't have an account? Create account", 15);
         jButton2.setBackground(new Color(0, 0, 0, 0)); // Transparent
         jButton2.setForeground(Color.BLACK);
         jButton2.setFont(new java.awt.Font("Arial", Font.PLAIN, 12));
@@ -59,7 +66,7 @@ public class SignIn extends javax.swing.JFrame {
         setTitle("Sign In");
 
         // Set frame background
-        getContentPane().setBackground(Color.WHITE); // JFrame background color
+        getContentPane().setBackground(Color.WHITE);
 
         // Set fixed heights
         Dimension fieldSize = new Dimension(260, 40);
@@ -103,7 +110,25 @@ public class SignIn extends javax.swing.JFrame {
         pack();
     }
 
-    // Rest of your methods remain unchanged...
+    private void handleForgotPassword() {
+        int choice = JOptionPane.showOptionDialog(this, 
+            "Forgot your password?", 
+            "Password Recovery",
+            JOptionPane.DEFAULT_OPTION,
+            JOptionPane.QUESTION_MESSAGE,
+            null,
+            new Object[]{"Get Reset Token", "Reset Password", "Cancel"},
+            "Get Reset Token");
+        
+        if (choice == 0) {
+            this.dispose();
+            new ForgotPassword().setVisible(true);
+        } else if (choice == 1) {
+            this.dispose();
+            new ResetPassword().setVisible(true);
+        }
+    }
+
     private void setPlaceholder(JTextField field, String placeholder) {
         field.setForeground(Color.GRAY);
         field.setText(placeholder);
@@ -151,21 +176,121 @@ public class SignIn extends javax.swing.JFrame {
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {
         String username = jTextField1.getText().trim();
-        if (username.equals("Enter name or email")) username = "";
+        if (username.equals("Enter username")) username = "";
         
         String password = new String(jPasswordField1.getPassword());
         if (password.equals("Enter password")) password = "";
+
+        if (username.isEmpty() || password.isEmpty()) {
+            JOptionPane.showMessageDialog(this, 
+                "Please enter both username and password", 
+                "Error", 
+                JOptionPane.ERROR_MESSAGE);
+            return;
+        }
 
         if (DatabaseUtil.validateUser(username, password)) {
             this.dispose();
             new Home(username).setVisible(true);
         } else {
-            JOptionPane.showMessageDialog(this, "Invalid username or password", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, 
+                "Invalid username or password", 
+                "Error", 
+                JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {
         this.dispose();
         new SignUp().setVisible(true);
+    }
+}
+
+class RoundedButton extends JButton {
+    private int cornerRadius;
+
+    public RoundedButton(String text, int cornerRadius) {
+        super(text);
+        this.cornerRadius = cornerRadius;
+        setContentAreaFilled(false);
+        setFocusPainted(false);
+        setBorderPainted(false);
+        setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        Graphics2D g2 = (Graphics2D) g.create();
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        if (getModel().isPressed()) {
+            g2.setColor(getBackground().darker());
+        } else if (getModel().isRollover()) {
+            g2.setColor(getBackground().brighter());
+        } else {
+            g2.setColor(getBackground());
+        }
+        g2.fillRoundRect(0, 0, getWidth(), getHeight(), cornerRadius, cornerRadius);
+
+        super.paintComponent(g2);
+        g2.dispose();
+    }
+}
+
+class RoundedTextField extends JTextField {
+    private int cornerRadius = 20;
+
+    public RoundedTextField(int columns) {
+        super(columns);
+        setOpaque(false);
+        setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        Graphics2D g2 = (Graphics2D) g.create();
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setColor(getBackground());
+        g2.fillRoundRect(0, 0, getWidth(), getHeight(), cornerRadius, cornerRadius);
+        super.paintComponent(g2);
+        g2.dispose();
+    }
+
+    @Override
+    protected void paintBorder(Graphics g) {
+        Graphics2D g2 = (Graphics2D) g.create();
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setColor(Color.LIGHT_GRAY);
+        g2.drawRoundRect(0, 0, getWidth()-1, getHeight()-1, cornerRadius, cornerRadius);
+        g2.dispose();
+    }
+}
+
+class RoundedPasswordField extends JPasswordField {
+    private int cornerRadius = 20;
+
+    public RoundedPasswordField(int columns) {
+        super(columns);
+        setOpaque(false);
+        setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        Graphics2D g2 = (Graphics2D) g.create();
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setColor(getBackground());
+        g2.fillRoundRect(0, 0, getWidth(), getHeight(), cornerRadius, cornerRadius);
+        super.paintComponent(g2);
+        g2.dispose();
+    }
+
+    @Override
+    protected void paintBorder(Graphics g) {
+        Graphics2D g2 = (Graphics2D) g.create();
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setColor(Color.LIGHT_GRAY);
+        g2.drawRoundRect(0, 0, getWidth()-1, getHeight()-1, cornerRadius, cornerRadius);
+        g2.dispose();
     }
 }

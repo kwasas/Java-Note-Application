@@ -217,6 +217,62 @@ public class DatabaseUtil {
             return false;
         }
     }
+    
+    // Add these methods to your DatabaseUtil class
+    public static boolean setPasswordResetToken(String username, String token) {
+        String sql = "UPDATE users SET reset_token = ? WHERE username = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, token);
+            stmt.setString(2, username);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error setting reset token: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public static boolean resetPassword(String token, String newPassword) {
+        String sql = "UPDATE users SET password = ?, reset_token = NULL WHERE reset_token = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, newPassword);
+            stmt.setString(2, token);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error resetting password: " + e.getMessage());
+            return false;
+        }
+    }
+    
+    public static boolean updateUserPassword(String username, String newPassword) {
+        String sql = "UPDATE users SET password = ? WHERE username = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, newPassword);
+            stmt.setString(2, username);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error updating password: " + e.getMessage());
+            return false;
+        }
+    }
+    
+    // Add this to DatabaseUtil.java:
+    public static boolean verifyUserEmail(String username, String email) {
+        String sql = "SELECT * FROM users WHERE username = ? AND email = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, username);
+            stmt.setString(2, email);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            System.err.println("Error verifying user email: " + e.getMessage());
+            return false;
+        }
+    }
 }
 
 class User {
