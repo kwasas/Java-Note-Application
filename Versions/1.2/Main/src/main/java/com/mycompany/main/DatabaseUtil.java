@@ -10,7 +10,11 @@ import java.util.List;
 import java.sql.Statement;
 
 public class DatabaseUtil {
-    private static final String DB_URL = "jdbc:mysql://localhost:3306/noteapp_schema?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
+    // Updated connection URL with proper parameters
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/noteapp_schema?" +
+                                      "useSSL=false&" +
+                                      "allowPublicKeyRetrieval=true&" +
+                                      "serverTimezone=UTC";
     private static final String DB_USER = "noteapp_user";
     private static final String DB_PASSWORD = "noteapp_password";
 
@@ -20,7 +24,7 @@ public class DatabaseUtil {
         } catch (ClassNotFoundException e) {
             System.err.println("MySQL JDBC Driver not found!");
             e.printStackTrace();
-        }
+        }   
     }
 
     public static Connection getConnection() throws SQLException {
@@ -84,10 +88,11 @@ public class DatabaseUtil {
         }
     }
 
-    // Note related methods
+    // Note related methods - UPDATED FOR SCHEMA CONSISTENCY
     public static List<String> getUserNotes(String username) {
         List<String> notes = new ArrayList<>();
-        String sql = "SELECT n.content FROM notes n JOIN users u ON n.user_id = u.user_id WHERE u.username = ?";
+        // Updated to match schema (using id instead of user_id)
+        String sql = "SELECT n.content FROM notes n JOIN users u ON n.user_id = u.id WHERE u.username = ?";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, username);
@@ -105,40 +110,54 @@ public class DatabaseUtil {
     }
 
     public static boolean addNote(String username, String content) {
-        String sql = "INSERT INTO notes (user_id, content) VALUES ((SELECT user_id FROM users WHERE username = ?), ?)";
-        
+        // First verify user exists
+        if (!usernameExists(username)) {
+            System.err.println("User " + username + " doesn't exist in database");
+            return false;
+        }
+
+        // Updated to match schema (using id instead of user_id)
+        String sql = "INSERT INTO notes (user_id, content) VALUES " +
+                    "((SELECT id FROM users WHERE username = ?), ?)";
+
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            
+
             stmt.setString(1, username);
             stmt.setString(2, content);
+
+            System.out.println("Executing query: " + stmt.toString());
             
-            int rowsAffected = stmt.executeUpdate();
+            int rows = stmt.executeUpdate();
+            conn.commit();
             
-            if (rowsAffected > 0) {
-                conn.commit();
-                System.out.println("Successfully added note for user: " + username);
+            if (rows > 0) {
+                try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        System.out.println("Inserted note with ID: " + generatedKeys.getLong(1));
+                    }
+                }
                 return true;
-            } else {
-                conn.rollback();
-                System.out.println("Failed to add note - no rows affected");
-                return false;
             }
+            return false;
             
         } catch (SQLException e) {
-            System.err.println("Error adding note: " + e.getMessage());
+            System.err.println("SQL Error adding note:");
+            System.err.println("SQL State: " + e.getSQLState());
+            System.err.println("Error Code: " + e.getErrorCode());
+            System.err.println("Message: " + e.getMessage());
             e.printStackTrace();
             return false;
         }
     }
 
     public static boolean updateNote(String username, int noteIndex, String newContent) {
-        // First get the note_id for the user's note at the specified index
-        String getNoteIdSql = "SELECT note_id FROM notes WHERE user_id = " +
-                            "(SELECT user_id FROM users WHERE username = ?) " +
-                            "ORDER BY note_id LIMIT 1 OFFSET ?";
+        // Updated to match schema (using id instead of user_id)
+        String getNoteIdSql = "SELECT id FROM notes WHERE user_id = " +
+                            "(SELECT id FROM users WHERE username = ?) " +
+                            "ORDER BY id LIMIT 1 OFFSET ?";
         
-        String updateSql = "UPDATE notes SET content = ? WHERE note_id = ?";
+        String updateSql = "UPDATE notes SET content = ? WHERE id = ?";
         
         try (Connection conn = getConnection();
              PreparedStatement getIdStmt = conn.prepareStatement(getNoteIdSql);
@@ -155,7 +174,7 @@ public class DatabaseUtil {
                 return false;
             }
             
-            int noteId = rs.getInt("note_id");
+            int noteId = rs.getInt("id");
             
             // Update the note
             updateStmt.setString(1, newContent);
@@ -181,7 +200,8 @@ public class DatabaseUtil {
     }
 
     private static void deleteAllNotesForUser(String username) {
-        String sql = "DELETE FROM notes WHERE user_id = (SELECT user_id FROM users WHERE username = ?)";
+        // Updated to match schema (using id instead of user_id)
+        String sql = "DELETE FROM notes WHERE user_id = (SELECT id FROM users WHERE username = ?)";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, username);

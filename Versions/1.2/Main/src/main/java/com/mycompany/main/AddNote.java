@@ -100,34 +100,49 @@ public class AddNote extends javax.swing.JFrame {
         String content = jTextAreaNote.getText().trim();
 
         if (content.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Note cannot be empty", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, 
+                "Note cannot be empty", 
+                "Error", 
+                JOptionPane.ERROR_MESSAGE);
             return;
         }
 
         System.out.println("Attempting to save note for user: " + currentUser);
-        boolean success;
+        System.out.println("Note content length: " + content.length());
 
-        if (noteIndex == -1) {
-            success = DatabaseUtil.addNote(currentUser, content);
-            if (success && saveListener != null) {
-                saveListener.onNoteSaved(content, -1);
+        try {
+            boolean success;
+            if (noteIndex == -1) {
+                System.out.println("Adding new note...");
+                success = DatabaseUtil.addNote(currentUser, content);
+            } else {
+                System.out.println("Updating note at index: " + noteIndex);
+                success = DatabaseUtil.updateNote(currentUser, noteIndex, content);
             }
-        } else {
-            success = DatabaseUtil.updateNote(currentUser, noteIndex, content);
-            if (success && saveListener != null) {
-                saveListener.onNoteSaved(content, noteIndex);
-            }
-        }
 
-        if (success) {
+            if (success) {
+                System.out.println("Database operation successful");
+                if (saveListener != null) {
+                    saveListener.onNoteSaved(content, noteIndex);
+                }
+                JOptionPane.showMessageDialog(this,
+                    noteIndex == -1 ? "Note saved successfully" : "Note updated successfully");
+                this.dispose();
+                new Home(currentUser).setVisible(true);
+            } else {
+                System.out.println("Database operation failed (returned false)");
+                JOptionPane.showMessageDialog(this,
+                    "Failed to save note. Check console for details.",
+                    "Error", 
+                    JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (Exception e) {
+            System.err.println("CRITICAL ERROR saving note:");
+            e.printStackTrace();
             JOptionPane.showMessageDialog(this,
-                noteIndex == -1 ? "Note saved successfully" : "Note updated successfully");
-            this.dispose();
-            new Home(currentUser).setVisible(true);
-        } else {
-            JOptionPane.showMessageDialog(this,
-                "Failed to save note. Ensure the user exists and DB connection is working.",
-                "Error", JOptionPane.ERROR_MESSAGE);
+                "Database error: " + e.getMessage(),
+                "Critical Error",
+                JOptionPane.ERROR_MESSAGE);
         }
     }
 }
