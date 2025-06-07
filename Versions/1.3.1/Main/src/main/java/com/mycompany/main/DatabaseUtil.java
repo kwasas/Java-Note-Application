@@ -27,15 +27,13 @@ public class DatabaseUtil {
     }
 
     // User related methods
-    public static boolean addUser(String username, String firstName, String lastName, String email, String password) {
-        String sql = "INSERT INTO users (username, first_name, last_name, email, password) VALUES (?, ?, ?, ?, ?)";
+    public static boolean addUser(String username, String email, String password) {
+        String sql = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, username);
-            stmt.setString(2, firstName);
-            stmt.setString(3, lastName);
-            stmt.setString(4, email);
-            stmt.setString(5, password);
+            stmt.setString(2, email);
+            stmt.setString(3, password);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             System.err.println("Error adding user: " + e.getMessage());
@@ -43,13 +41,12 @@ public class DatabaseUtil {
         }
     }
 
-    public static boolean validateUser(String usernameOrEmail, String password) {
-        String sql = "SELECT * FROM users WHERE (username = ? OR email = ?) AND password = ?";
+    public static boolean validateUser(String username, String password) {
+        String sql = "SELECT * FROM users WHERE username = ? AND password = ?";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, usernameOrEmail);
-            stmt.setString(2, usernameOrEmail);
-            stmt.setString(3, password);
+            stmt.setString(1, username);
+            stmt.setString(2, password);
             try (ResultSet rs = stmt.executeQuery()) {
                 return rs.next();
             }
@@ -96,8 +93,6 @@ public class DatabaseUtil {
                 if (rs.next()) {
                     return new User(
                         rs.getString("username"),
-                        rs.getString("first_name"),
-                        rs.getString("last_name"),
                         rs.getString("email"),
                         rs.getString("password")
                     );
@@ -109,63 +104,18 @@ public class DatabaseUtil {
         return null;
     }
 
-    public static boolean updateUser(String oldUsername, String newUsername, String firstName, String lastName, String email, String newPassword) {
-        String sql = "UPDATE users SET username = ?, first_name = ?, last_name = ?, email = ?, password = ? WHERE username = ?";
+    public static boolean updateUser(String oldUsername, String newUsername, String newEmail, String newPassword) {
+        String sql = "UPDATE users SET username = ?, email = ?, password = ? WHERE username = ?";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, newUsername);
-            stmt.setString(2, firstName);
-            stmt.setString(3, lastName);
-            stmt.setString(4, email);
-            stmt.setString(5, newPassword);
-            stmt.setString(6, oldUsername);
+            stmt.setString(2, newEmail);
+            stmt.setString(3, newPassword);
+            stmt.setString(4, oldUsername);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             System.err.println("Error updating user: " + e.getMessage());
             return false;
-        }
-    }
-
-    public static boolean updateUserPassword(String username, String newPassword) {
-        String sql = "UPDATE users SET password = ? WHERE username = ?";
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, newPassword);
-            stmt.setString(2, username);
-            return stmt.executeUpdate() > 0;
-        } catch (SQLException e) {
-            System.err.println("Error updating password: " + e.getMessage());
-            return false;
-        }
-    }
-
-    public static boolean verifyUserEmail(String username, String email) {
-        String sql = "SELECT * FROM users WHERE username = ? AND email = ?";
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, username);
-            stmt.setString(2, email);
-            try (ResultSet rs = stmt.executeQuery()) {
-                return rs.next();
-            }
-        } catch (SQLException e) {
-            System.err.println("Error verifying user email: " + e.getMessage());
-            return false;
-        }
-    }
-
-    public static String getUsernameFromInput(String usernameOrEmail) {
-        String sql = "SELECT username FROM users WHERE username = ? OR email = ?";
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, usernameOrEmail);
-            stmt.setString(2, usernameOrEmail);
-            try (ResultSet rs = stmt.executeQuery()) {
-                return rs.next() ? rs.getString("username") : null;
-            }
-        } catch (SQLException e) {
-            System.err.println("Error getting username: " + e.getMessage());
-            return null;
         }
     }
 
@@ -181,7 +131,7 @@ public class DatabaseUtil {
                     notes.add(new Note(
                         rs.getInt("id"),
                         rs.getString("content"),
-                        rs.getString("category")
+                        rs.getString("category") // This can be null
                     ));
                 }
             }
@@ -219,6 +169,7 @@ public class DatabaseUtil {
             stmt.setString(1, username);
             stmt.setString(2, content);
             
+            // Handle null or empty category
             if (category == null || category.trim().isEmpty()) {
                 stmt.setNull(3, Types.VARCHAR);
             } else {
@@ -238,6 +189,7 @@ public class DatabaseUtil {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, newContent);
             
+            // Handle null or empty category
             if (newCategory == null || newCategory.trim().isEmpty()) {
                 stmt.setNull(2, Types.VARCHAR);
             } else {
@@ -266,68 +218,75 @@ public class DatabaseUtil {
         }
     }
     
+    // Add these methods to your DatabaseUtil class
+    public static boolean setPasswordResetToken(String username, String token) {
+        String sql = "UPDATE users SET reset_token = ? WHERE username = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, token);
+            stmt.setString(2, username);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error setting reset token: " + e.getMessage());
+            return false;
+        }
+    }
+
     public static boolean resetPassword(String token, String newPassword) {
-        // First verify the token exists and is valid
-        String verifyTokenSql = "SELECT username FROM password_reset_tokens WHERE token = ? AND expiry_time > NOW()";
-        String updatePasswordSql = "UPDATE users SET password = ? WHERE username = ?";
-        String deleteTokenSql = "DELETE FROM password_reset_tokens WHERE token = ?";
-
-        try (Connection conn = getConnection()) {
-            // Verify token
-            String username = null;
-            try (PreparedStatement verifyStmt = conn.prepareStatement(verifyTokenSql)) {
-                verifyStmt.setString(1, token);
-                try (ResultSet rs = verifyStmt.executeQuery()) {
-                    if (rs.next()) {
-                        username = rs.getString("username");
-                    }
-                }
-            }
-
-            if (username == null) {
-                return false; // Invalid or expired token
-            }
-
-            // Update password
-            try (PreparedStatement updateStmt = conn.prepareStatement(updatePasswordSql)) {
-                updateStmt.setString(1, newPassword);
-                updateStmt.setString(2, username);
-                int updated = updateStmt.executeUpdate();
-
-                if (updated > 0) {
-                    // Delete the used token
-                    try (PreparedStatement deleteStmt = conn.prepareStatement(deleteTokenSql)) {
-                        deleteStmt.setString(1, token);
-                        deleteStmt.executeUpdate();
-                    }
-                    return true;
-                }
-            }
+        String sql = "UPDATE users SET password = ?, reset_token = NULL WHERE reset_token = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, newPassword);
+            stmt.setString(2, token);
+            return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             System.err.println("Error resetting password: " + e.getMessage());
+            return false;
         }
-        return false;
+    }
+    
+    public static boolean updateUserPassword(String username, String newPassword) {
+        String sql = "UPDATE users SET password = ? WHERE username = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, newPassword);
+            stmt.setString(2, username);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error updating password: " + e.getMessage());
+            return false;
+        }
+    }
+    
+    // Add this to DatabaseUtil.java:
+    public static boolean verifyUserEmail(String username, String email) {
+        String sql = "SELECT * FROM users WHERE username = ? AND email = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, username);
+            stmt.setString(2, email);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            System.err.println("Error verifying user email: " + e.getMessage());
+            return false;
+        }
     }
 }
 
 class User {
     private String username;
-    private String firstName;
-    private String lastName;
     private String email;
     private String password;
 
-    public User(String username, String firstName, String lastName, String email, String password) {
+    public User(String username, String email, String password) {
         this.username = username;
-        this.firstName = firstName;
-        this.lastName = lastName;
         this.email = email;
         this.password = password;
     }
 
     public String getUsername() { return username; }
-    public String getFirstName() { return firstName; }
-    public String getLastName() { return lastName; }
     public String getEmail() { return email; }
     public String getPassword() { return password; }
 }

@@ -20,12 +20,23 @@ public class ForgotPassword extends JFrame {
     }
 
     private void initComponents() {
-        jLabelTitle = new JLabel("Reset Password");
-        jLabelTitle.setFont(new Font("Arial", Font.BOLD, 24));
-        jLabelTitle.setHorizontalAlignment(SwingConstants.CENTER);
+        // Create main panel with BorderLayout
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBackground(Color.WHITE);
+        getContentPane().add(mainPanel);
 
-        // Back button (top-left)
-        jButtonBack = new JButton("← Back");
+        // Create top panel with back button and title
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.setBackground(Color.WHITE);
+        topPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 0, 20));
+
+        jLabelTitle = new JLabel("Reset Password", SwingConstants.CENTER);
+        jLabelTitle.setFont(new Font("Arial", Font.BOLD, 24));
+
+        // Back button (left-aligned)
+        jButtonBack = new JButton(new ImageIcon("C:\\Users\\KennethWayneNAsas\\Documents\\GitHub\\Java-Note-Application\\Versions\\1.3.1\\Main\\src\\main\\resources\\assets\\arrow_back.png"));
+        jButtonBack.setBorder(BorderFactory.createEmptyBorder());
+        jButtonBack.setContentAreaFilled(false);
         jButtonBack.setFont(new Font("Arial", Font.PLAIN, 12));
         jButtonBack.setBorderPainted(false);
         jButtonBack.setContentAreaFilled(false);
@@ -35,69 +46,55 @@ public class ForgotPassword extends JFrame {
             new SignIn().setVisible(true);
         });
 
-        // Username field (matches SignUp style)
+        topPanel.add(jButtonBack, BorderLayout.WEST);
+        topPanel.add(jLabelTitle, BorderLayout.CENTER);
+        mainPanel.add(topPanel, BorderLayout.NORTH);
+
+        // Create center panel with form elements
+        JPanel centerPanel = new JPanel();
+        centerPanel.setBackground(Color.WHITE);
+        centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
+        centerPanel.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
+
+        // Username field
         jTextFieldUsername = new RoundedTextField(20);
-        setPlaceholder(jTextFieldUsername, "Enter your username");
+        setPlaceholder(jTextFieldUsername, "Your Username");
+        jTextFieldUsername.setMaximumSize(new Dimension(300, 45));
+        centerPanel.add(jTextFieldUsername);
+        centerPanel.add(Box.createRigidArea(new Dimension(0, 15)));
 
-        // Email field (matches SignUp style)
+        // Email field
         jTextFieldEmail = new RoundedTextField(20);
-        setPlaceholder(jTextFieldEmail, "Enter your email");
+        setPlaceholder(jTextFieldEmail, "Your Email");
+        jTextFieldEmail.setMaximumSize(new Dimension(300, 45));
+        centerPanel.add(jTextFieldEmail);
+        centerPanel.add(Box.createRigidArea(new Dimension(0, 15)));
 
-        // New password field (matches SignUp style)
+        // New password field
         jPasswordFieldNew = new RoundedPasswordField(20);
         setPasswordPlaceholder(jPasswordFieldNew, "New Password");
+        jPasswordFieldNew.setMaximumSize(new Dimension(300, 45));
+        centerPanel.add(jPasswordFieldNew);
+        centerPanel.add(Box.createRigidArea(new Dimension(0, 15)));
 
-        // Confirm password field (matches SignUp style)
+        // Confirm password field
         jPasswordFieldConfirm = new RoundedPasswordField(20);
         setPasswordPlaceholder(jPasswordFieldConfirm, "Confirm Password");
+        jPasswordFieldConfirm.setMaximumSize(new Dimension(300, 45));
+        centerPanel.add(jPasswordFieldConfirm);
+        centerPanel.add(Box.createRigidArea(new Dimension(0, 30)));
 
-        // Reset button (matches SignUp button style)
+        // Reset button (centered)
         jButtonReset = new RoundedButton("Reset Password", 35);
         jButtonReset.setBackground(new Color(255, 204, 0));
         jButtonReset.setForeground(Color.WHITE);
         jButtonReset.setFont(new Font("Arial", Font.BOLD, 14));
+        jButtonReset.setAlignmentX(Component.CENTER_ALIGNMENT);
+        jButtonReset.setMaximumSize(new Dimension(200, 45));
         jButtonReset.addActionListener(e -> resetPassword());
+        centerPanel.add(jButtonReset);
 
-        // Layout setup (matches SignUp exactly)
-        GroupLayout layout = new GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        getContentPane().setBackground(Color.WHITE);
-
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                    .addComponent(jButtonBack, GroupLayout.PREFERRED_SIZE, 80, GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabelTitle, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jTextFieldUsername, GroupLayout.PREFERRED_SIZE, 320, GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jTextFieldEmail, GroupLayout.PREFERRED_SIZE, 320, GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jPasswordFieldNew, GroupLayout.PREFERRED_SIZE, 320, GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jPasswordFieldConfirm, GroupLayout.PREFERRED_SIZE, 320, GroupLayout.PREFERRED_SIZE)
-                    .addGroup(GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(jButtonReset, GroupLayout.PREFERRED_SIZE, 200, GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap())
-        );
-
-        layout.setVerticalGroup(
-            layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jButtonBack)
-                .addGap(20)
-                .addComponent(jLabelTitle)
-                .addGap(30)
-                .addComponent(jTextFieldUsername, GroupLayout.PREFERRED_SIZE, 45, GroupLayout.PREFERRED_SIZE)
-                .addGap(15)
-                .addComponent(jTextFieldEmail, GroupLayout.PREFERRED_SIZE, 45, GroupLayout.PREFERRED_SIZE)
-                .addGap(15)
-                .addComponent(jPasswordFieldNew, GroupLayout.PREFERRED_SIZE, 45, GroupLayout.PREFERRED_SIZE)
-                .addGap(15)
-                .addComponent(jPasswordFieldConfirm, GroupLayout.PREFERRED_SIZE, 45, GroupLayout.PREFERRED_SIZE)
-                .addGap(30)
-                .addComponent(jButtonReset, GroupLayout.PREFERRED_SIZE, 45, GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(50, Short.MAX_VALUE)
-        );
+        mainPanel.add(centerPanel, BorderLayout.CENTER);
 
         pack();
     }
@@ -135,7 +132,6 @@ public class ForgotPassword extends JFrame {
         }
     }
 
-    // Add these helper methods (same as in SignUp)
     private void setPlaceholder(JTextField field, String placeholder) {
         field.setForeground(Color.GRAY);
         field.setText(placeholder);
@@ -181,4 +177,3 @@ public class ForgotPassword extends JFrame {
         });
     }
 }
-

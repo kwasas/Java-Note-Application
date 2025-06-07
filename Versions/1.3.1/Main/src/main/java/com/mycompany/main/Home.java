@@ -7,7 +7,6 @@ import java.awt.event.*;
 import java.util.List;
 
 public class Home extends javax.swing.JFrame {
-    private JButton jAddNoteButton;
     private JTextField jSearchField;
     private JLabel jTitleLabel;
     private JList<Note> jNotesList;
@@ -118,13 +117,28 @@ public class Home extends javax.swing.JFrame {
         jScrollPane.setBorder(BorderFactory.createEmptyBorder());
         jScrollPane.setViewportBorder(BorderFactory.createEmptyBorder());
 
-        jAddNoteButton = new JButton("+ Add Note");
-        jAddNoteButton.setFont(new Font("Arial", Font.BOLD, 14));
-        jAddNoteButton.setBackground(new Color(255, 204, 0));
-        jAddNoteButton.setForeground(Color.BLACK);
-        jAddNoteButton.setFocusPainted(false);
-        jAddNoteButton.setBorderPainted(false);
-        jAddNoteButton.setOpaque(true);
+        // Create bottom navigation buttons
+        JPanel buttonPanel = new JPanel(new GridLayout(1, 3, 10, 0));
+        buttonPanel.setBorder(new EmptyBorder(10, 20, 10, 20));
+        buttonPanel.setBackground(Color.WHITE);
+
+        // Dashboard Button
+        JButton jDashboardButton = new JButton("Dashboard");
+        jDashboardButton = new JButton(new ImageIcon("C:\\Users\\KennethWayneNAsas\\Documents\\GitHub\\Java-Note-Application\\Versions\\1.3.1\\Main\\src\\main\\resources\\assets\\dashboard.png"));
+        jDashboardButton.setBorder(BorderFactory.createEmptyBorder());
+        jDashboardButton.setContentAreaFilled(false);
+        styleNavigationButton(jDashboardButton);
+        jDashboardButton.addActionListener(e -> {
+            // Add dashboard functionality here
+            JOptionPane.showMessageDialog(this, "Dashboard will be implemented");
+        });
+
+        // Add Note Button
+        JButton jAddNoteButton = new JButton("Add");
+        jAddNoteButton = new JButton(new ImageIcon("C:\\Users\\KennethWayneNAsas\\Documents\\GitHub\\Java-Note-Application\\Versions\\1.3.1\\Main\\src\\main\\resources\\assets\\message-add.png"));
+        jAddNoteButton.setBorder(BorderFactory.createEmptyBorder());
+        jAddNoteButton.setContentAreaFilled(false);
+        styleNavigationButton(jAddNoteButton);
         jAddNoteButton.addActionListener(e -> {
             AddNote addNote = new AddNote(currentUser);
             addNote.setSaveListener(note -> {
@@ -136,13 +150,20 @@ public class Home extends javax.swing.JFrame {
             dispose();
         });
 
+        // Settings Button
         JButton jSettingsButton = new JButton("Settings");
-        jSettingsButton.setFont(new Font("Arial", Font.PLAIN, 12));
-        jSettingsButton.setBackground(Color.WHITE);
+        jSettingsButton = new JButton(new ImageIcon("C:\\Users\\KennethWayneNAsas\\Documents\\GitHub\\Java-Note-Application\\Versions\\1.3.1\\Main\\src\\main\\resources\\assets\\profile-circle.png"));
+        jSettingsButton.setBorder(BorderFactory.createEmptyBorder());
+        jSettingsButton.setContentAreaFilled(false);
+        styleNavigationButton(jSettingsButton);
         jSettingsButton.addActionListener(e -> {
             new Settings(currentUser).setVisible(true);
             dispose();
         });
+
+        buttonPanel.add(jDashboardButton);
+        buttonPanel.add(jAddNoteButton);
+        buttonPanel.add(jSettingsButton);
 
         GroupLayout layout = new GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -156,10 +177,7 @@ public class Home extends javax.swing.JFrame {
                     .addComponent(jTitleLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(filterPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jScrollPane)
-                    .addGroup(GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addComponent(jSettingsButton)
-                        .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jAddNoteButton, GroupLayout.PREFERRED_SIZE, 150, GroupLayout.PREFERRED_SIZE)))
+                    .addComponent(buttonPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
 
@@ -172,13 +190,21 @@ public class Home extends javax.swing.JFrame {
                 .addGap(15)
                 .addComponent(jScrollPane, GroupLayout.DEFAULT_SIZE, 300, Short.MAX_VALUE)
                 .addGap(15)
-                .addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
-                    .addComponent(jAddNoteButton, GroupLayout.PREFERRED_SIZE, 45, GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jSettingsButton))
+                .addComponent(buttonPanel, GroupLayout.PREFERRED_SIZE, 45, GroupLayout.PREFERRED_SIZE)
                 .addContainerGap()
         );
 
         pack();
+    }
+
+    private void styleNavigationButton(JButton button) {
+        button.setFont(new Font("Arial", Font.BOLD, 14));
+        button.setForeground(Color.BLACK);
+        button.setFocusPainted(false);
+        button.setBorderPainted(false);
+        button.setOpaque(true);
+        button.setBackground(Color.WHITE);
+        button.setBorder(new EmptyBorder(5, 5, 5, 5));
     }
 
     private void loadNotes() {

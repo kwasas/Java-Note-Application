@@ -12,8 +12,6 @@ public class SignUp extends javax.swing.JFrame {
     private javax.swing.JButton jButton2;
     private javax.swing.JTextField jTextField1;
     private javax.swing.JTextField jTextField2;
-    private javax.swing.JTextField jTextFieldFirstName;
-    private javax.swing.JTextField jTextFieldLastName;
     private javax.swing.JPasswordField jPasswordField1;
     private javax.swing.JPasswordField jPasswordField2;
     private javax.swing.JLabel jLabel0;
@@ -30,13 +28,6 @@ public class SignUp extends javax.swing.JFrame {
         jLabel0 = new JLabel("Create Account");
         jLabel0.setFont(new java.awt.Font("Arial", Font.BOLD, 18));
         jLabel0.setHorizontalAlignment(SwingConstants.CENTER);
-        
-        // Add first name and last name fields
-        jTextFieldFirstName = new RoundedTextField(20);
-        setPlaceholder(jTextFieldFirstName, "First Name");
-        
-        jTextFieldLastName = new RoundedTextField(20);
-        setPlaceholder(jTextFieldLastName, "Last Name");
         
         // Username field with placeholder
         jTextField1 = new RoundedTextField(20);
@@ -113,30 +104,25 @@ public class SignUp extends javax.swing.JFrame {
         // Changed: Added horizontal padding (20px on each side) by using createSequentialGroup()
         layout.setHorizontalGroup(
             layout.createSequentialGroup()
-                .addGap(15)
+                .addGap(15) // Left padding
                 .addGroup(layout.createParallelGroup(GroupLayout.Alignment.CENTER)
-                    .addComponent(jLabel0)
-                    .addComponent(jTextFieldFirstName, GroupLayout.PREFERRED_SIZE, 260, GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jTextFieldLastName, GroupLayout.PREFERRED_SIZE, 260, GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jTextField1) // username
-                    .addComponent(jTextField2) // email
-                    .addComponent(jPasswordField1)
-                    .addComponent(jPasswordField2)
+                    .addComponent(jLabel0, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jTextField1, GroupLayout.PREFERRED_SIZE, 260, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jTextField2, GroupLayout.PREFERRED_SIZE, 260, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jPasswordField1, GroupLayout.PREFERRED_SIZE, 260, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jPasswordField2, GroupLayout.PREFERRED_SIZE, 260, GroupLayout.PREFERRED_SIZE)
                     .addComponent(jCheckBox1)
                     .addComponent(jButton1, GroupLayout.PREFERRED_SIZE, 200, GroupLayout.PREFERRED_SIZE)
                     .addComponent(jButton2)
-                .addGap(20))
-        );
+                .addGap(20) // Right padding
+                ));
 
         // Changed: Added vertical padding at top and bottom
         layout.setVerticalGroup(
             layout.createSequentialGroup()
-                .addGap(100)
+                .addGap(100) // Top padding
                 .addComponent(jLabel0)
                 .addGap(20)
-                .addComponent(jTextFieldFirstName, GroupLayout.PREFERRED_SIZE, 45, GroupLayout.PREFERRED_SIZE)
-                .addGap(15)
-                .addComponent(jTextFieldLastName, GroupLayout.PREFERRED_SIZE, 45, GroupLayout.PREFERRED_SIZE)
                 .addComponent(jTextField1, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jTextField2, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
@@ -203,8 +189,6 @@ public class SignUp extends javax.swing.JFrame {
     }
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {
-        String firstName = jTextFieldFirstName.getText().trim();
-        String lastName = jTextFieldLastName.getText().trim();
         String username = jTextField1.getText().trim();
         if (username.equals("Your Username")) username = "";
         
@@ -248,7 +232,7 @@ public class SignUp extends javax.swing.JFrame {
             return;
         }
 
-         if (DatabaseUtil.addUser(username, firstName, lastName, email, password)) {
+        if (DatabaseUtil.addUser(username, email, password)) {
             JOptionPane.showMessageDialog(this, 
                 "Account created successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
             this.dispose();

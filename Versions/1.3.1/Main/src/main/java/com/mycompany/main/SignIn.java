@@ -175,13 +175,13 @@ public class SignIn extends javax.swing.JFrame {
     }
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {
-        String usernameOrEmail = jTextField1.getText().trim();
-        if (usernameOrEmail.equals("Email or username")) usernameOrEmail = "";
+        String username = jTextField1.getText().trim();
+        if (username.equals("Enter username")) username = "";
         
         String password = new String(jPasswordField1.getPassword());
-        if (password.equals("Password")) password = "";
+        if (password.equals("Enter password")) password = "";
 
-        if (usernameOrEmail.isEmpty() || password.isEmpty()) {
+        if (username.isEmpty() || password.isEmpty()) {
             JOptionPane.showMessageDialog(this, 
                 "Please enter both username and password", 
                 "Error", 
@@ -189,9 +189,9 @@ public class SignIn extends javax.swing.JFrame {
             return;
         }
 
-        if (DatabaseUtil.validateUser(usernameOrEmail, password)) {
+        if (DatabaseUtil.validateUser(username, password)) {
             this.dispose();
-            new Home(usernameOrEmail).setVisible(true);
+            new Home(username).setVisible(true);
         } else {
             JOptionPane.showMessageDialog(this, 
                 "Invalid username or password", 
