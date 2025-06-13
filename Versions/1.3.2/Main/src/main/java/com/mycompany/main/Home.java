@@ -91,29 +91,29 @@ public class Home extends javax.swing.JFrame {
 
         // Search Field with placeholder
         jSearchField = new RoundedTextField(20);
-        jSearchField.setForeground(new Color(150, 150, 150));
-        jSearchField.setFont(new Font("Arial", Font.PLAIN, 14));
-        jSearchField.setBackground(Color.WHITE);
-        jSearchField.addFocusListener(new FocusAdapter() {
-            @Override
-            public void focusGained(FocusEvent e) {
-                if (jSearchField.getText().equals(" Search")) {
-                    jSearchField.setText("");
-                    jSearchField.setForeground(Color.BLACK);
-                }
-            }
-            @Override
-            public void focusLost(FocusEvent e) {
-                if (jSearchField.getText().isEmpty()) {
-                    jSearchField.setText(" Search");
-                    jSearchField.setForeground(new Color(150, 150, 150));
-                }
-            }
-        });
-        jSearchField.addKeyListener(new KeyAdapter() {
-            public void keyReleased(KeyEvent e) {
-                filterNotes();
-            }
+jSearchField.setForeground(new Color(150, 150, 150));
+jSearchField.setFont(new Font("Arial", Font.PLAIN, 14));
+jSearchField.setBackground(Color.WHITE);
+jSearchField.addFocusListener(new FocusAdapter() {
+    @Override
+    public void focusGained(FocusEvent e) {
+        if (jSearchField.getText().equals(" Search")) {
+            jSearchField.setText("");
+            jSearchField.setForeground(Color.BLACK);
+        }
+    }
+    @Override
+    public void focusLost(FocusEvent e) {
+        if (jSearchField.getText().isEmpty()) {
+            jSearchField.setText(" Search");
+            jSearchField.setForeground(new Color(150, 150, 150));
+        }
+    }
+});
+jSearchField.addKeyListener(new KeyAdapter() {
+    public void keyReleased(KeyEvent e) {
+        filterNotes();
+    }
 });
 
         // Category Filter
