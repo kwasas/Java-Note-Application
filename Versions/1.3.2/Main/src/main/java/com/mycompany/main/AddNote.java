@@ -57,7 +57,7 @@ public class AddNote extends javax.swing.JFrame {
         headerPanel.setBorder(new EmptyBorder(15, 20, 15, 20));
 
         // Back button with icon (safe loading)
-        jButtonCancel = createIconButton("/assets/arrow_back.png", "Back");
+        jButtonCancel = createIconButton("/assets/arrow-back.png", "Back");
         styleHeaderButton(jButtonCancel);
         jButtonCancel.addActionListener(e -> dispose());
         headerPanel.add(jButtonCancel, BorderLayout.WEST);

@@ -41,7 +41,7 @@ public class EditProfile extends JFrame {
         topPanel.setBackground(Color.WHITE);
         topPanel.setBorder(BorderFactory.createEmptyBorder(20, 30, 0, 30));
 
-        jButtonBack = new JButton(new ImageIcon("C:\\Users\\KennethWayneNAsas\\Documents\\GitHub\\Java-Note-Application\\Versions\\1.3.1\\Main\\src\\main\\resources\\assets\\arrow_back.png"));
+        jButtonBack = new JButton(new ImageIcon(getClass().getResource("/assets/arrow-back.png")));
         jButtonBack.setBorder(BorderFactory.createEmptyBorder());
         jButtonBack.setContentAreaFilled(false);
         jButtonBack.setBorderPainted(false);
