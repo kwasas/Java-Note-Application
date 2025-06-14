@@ -48,34 +48,54 @@ public class AddNote extends javax.swing.JFrame {
     private void initComponents() {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setTitle(noteId == -1 ? "Add Note" : "Edit Note");
+        getContentPane().setBackground(Color.WHITE);
 
+        // Header panel with buttons
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setBackground(Color.WHITE);
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        // Back button (upper left) - can be replaced with an image later
+        jButtonCancel = new JButton("Back");
+        jButtonCancel.setFont(new Font("Arial", Font.PLAIN, 14));
+        jButtonCancel.setContentAreaFilled(false); // Makes button transparent
+        jButtonCancel.addActionListener(this::jButtonCancelActionPerformed);
+        headerPanel.add(jButtonCancel, BorderLayout.WEST);
+
+        // Title label (center)
         jLabelTitle = new JLabel(noteId == -1 ? "Add New Note" : "Edit Note");
         jLabelTitle.setFont(new Font("Arial", Font.BOLD, 18));
         jLabelTitle.setHorizontalAlignment(SwingConstants.CENTER);
+        headerPanel.add(jLabelTitle, BorderLayout.CENTER);
 
-        jButtonCancel = new JButton("Back");
-        jButtonCancel.setFont(new Font("Arial", Font.PLAIN, 14));
-        jButtonCancel.addActionListener(this::jButtonCancelActionPerformed);
-
+        // Save button (upper right) - can be replaced with an image later
         jButtonSave = new JButton(noteId == -1 ? "Save" : "Update");
         jButtonSave.setFont(new Font("Arial", Font.PLAIN, 14));
+        jButtonSave.setContentAreaFilled(false); // Makes button transparent
         jButtonSave.addActionListener(this::jButtonSaveActionPerformed);
+        headerPanel.add(jButtonSave, BorderLayout.EAST);
 
+        // Note content area
         jTextAreaNote = new JTextArea();
         jTextAreaNote.setFont(new Font("Arial", Font.PLAIN, 14));
         jTextAreaNote.setLineWrap(true);
         jTextAreaNote.setWrapStyleWord(true);
+        jTextAreaNote.setBackground(Color.WHITE);
 
         jScrollPaneNote = new JScrollPane(jTextAreaNote);
         jScrollPaneNote.setBorder(BorderFactory.createEmptyBorder());
+        jScrollPaneNote.setBackground(Color.WHITE);
 
+        // Category components
         jComboBoxCategory = new JComboBox<>();
         jComboBoxCategory.setEditable(true);
         jComboBoxCategory.setFont(new Font("Arial", Font.PLAIN, 14));
+        jComboBoxCategory.setBackground(Color.WHITE);
 
         jButtonNewCategory = new JButton("+");
         jButtonNewCategory.setFont(new Font("Arial", Font.BOLD, 12));
         jButtonNewCategory.setPreferredSize(new Dimension(30, 30));
+        jButtonNewCategory.setContentAreaFilled(false); // Makes button transparent
         jButtonNewCategory.addActionListener(e -> {
             String newCategory = JOptionPane.showInputDialog(this, "Enter new category name:");
             if (newCategory != null && !newCategory.trim().isEmpty()) {
@@ -85,42 +105,24 @@ public class AddNote extends javax.swing.JFrame {
         });
 
         JPanel categoryPanel = new JPanel(new BorderLayout(5, 0));
+        categoryPanel.setBackground(Color.WHITE);
         categoryPanel.add(new JLabel("Category:"), BorderLayout.WEST);
         categoryPanel.add(jComboBoxCategory, BorderLayout.CENTER);
         categoryPanel.add(jButtonNewCategory, BorderLayout.EAST);
 
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
-        buttonPanel.add(jButtonCancel);
-        buttonPanel.add(jButtonSave);
+        // Main layout
+        JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        mainPanel.setBackground(Color.WHITE);
+        
+        mainPanel.add(headerPanel, BorderLayout.NORTH);
+        mainPanel.add(categoryPanel, BorderLayout.CENTER);
+        mainPanel.add(jScrollPaneNote, BorderLayout.SOUTH);
 
-        GroupLayout layout = new GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        getContentPane().setBackground(Color.WHITE);
-
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                .addGroup(layout.createSequentialGroup()
-                    .addContainerGap()
-                    .addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                        .addComponent(jLabelTitle, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(categoryPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jScrollPaneNote)
-                        .addComponent(buttonPanel, GroupLayout.Alignment.CENTER))
-                    .addContainerGap())
-        );
-
-        layout.setVerticalGroup(
-            layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jLabelTitle)
-                .addGap(15)
-                .addComponent(categoryPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                .addGap(15)
-                .addComponent(jScrollPaneNote, GroupLayout.DEFAULT_SIZE, 300, Short.MAX_VALUE)
-                .addGap(15)
-                .addComponent(buttonPanel, GroupLayout.PREFERRED_SIZE, 40, GroupLayout.PREFERRED_SIZE)
-                .addContainerGap());
-      
+        // Adjust the layout to give more space to the text area
+        getContentPane().setLayout(new BorderLayout());
+        getContentPane().add(mainPanel, BorderLayout.NORTH);
+        getContentPane().add(jScrollPaneNote, BorderLayout.CENTER);
 
         pack();
     }
@@ -144,89 +146,55 @@ public class AddNote extends javax.swing.JFrame {
     }
 
     private void jButtonSaveActionPerformed(ActionEvent evt) {
-    String content = jTextAreaNote.getText().trim();
-    String category = (String) jComboBoxCategory.getSelectedItem();
+        String content = jTextAreaNote.getText().trim();
+        String category = (String) jComboBoxCategory.getSelectedItem();
 
-    if (content.isEmpty()) {
-        JOptionPane.showMessageDialog(this, 
-            "Note content cannot be empty", 
-            "Error", 
-            JOptionPane.ERROR_MESSAGE);
-        return;
-    }
-
-    try {
-        Note note;
-        boolean success;
-
-        if (noteId == -1) {
-            // Create new note
-            note = new Note(content, category);
-            success = DatabaseUtil.addNote(currentUser, note);
-            
-            if (success) {
-                // Get the saved note with ID from database
-                List<Note> notes = DatabaseUtil.getUserNotes(currentUser);
-                Note savedNote = findNewlyCreatedNote(notes, content, category);
-                if (savedNote != null) {
-                    note = savedNote;
-                }
-                
-                JOptionPane.showMessageDialog(this,
-                    "Note saved successfully!",
-                    "Success",
-                    JOptionPane.INFORMATION_MESSAGE);
-            }
-        } else {
-            // Update existing note
-            note = new Note(noteId, content, category);
-            success = DatabaseUtil.updateNote(currentUser, note);
-            
-            if (success) {
-                JOptionPane.showMessageDialog(this,
-                    "Note updated successfully!",
-                    "Success",
-                    JOptionPane.INFORMATION_MESSAGE);
-            }
-        }
-
-        if (success) {
-            if (saveListener != null) {
-                saveListener.onNoteSaved(note);
-            }
-            this.dispose();
-            new Home(currentUser).setVisible(true); // Navigate back to Home
-        } else {
-            JOptionPane.showMessageDialog(this,
-                "Failed to save note to database", 
+        if (content.isEmpty()) {
+            JOptionPane.showMessageDialog(this, 
+                "Note content cannot be empty", 
                 "Error", 
                 JOptionPane.ERROR_MESSAGE);
+            return;
         }
-    } catch (Exception e) {
-        JOptionPane.showMessageDialog(this,
-            "Database error: " + e.getMessage(),
-            "Error",
-            JOptionPane.ERROR_MESSAGE);
-        e.printStackTrace();
-    }
-}
 
-    private Note findNewlyCreatedNote(List<Note> notes, String content, String category) {
-        if (notes == null) return null;
-        
-        for (Note note : notes) {
-            if (note.getContent().equals(content)) {
-                if (category == null || category.isEmpty()) {
-                    if (note.getCategory() == null) {
-                        return note;
+        try {
+            Note note;
+            boolean success;
+
+            if (noteId == -1) {
+                note = new Note(content, category);
+                success = DatabaseUtil.addNote(currentUser, note);
+                
+                if (success) {
+                    if (saveListener != null) {
+                        saveListener.onNoteSaved(note);
                     }
-                } else {
-                    if (category.equals(note.getCategory())) {
-                        return note;
+                    this.dispose();
+                }
+            } else {
+                note = new Note(noteId, content, category);
+                success = DatabaseUtil.updateNote(currentUser, note);
+                
+                if (success) {
+                    if (saveListener != null) {
+                        saveListener.onNoteSaved(note);
                     }
+                    this.dispose();
                 }
             }
+
+            if (!success) {
+                JOptionPane.showMessageDialog(this,
+                    "Failed to save note to database", 
+                    "Error", 
+                    JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                "Database error: " + e.getMessage(),
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
         }
-        return null;
     }
 }

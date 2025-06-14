@@ -12,10 +12,8 @@ public class Home extends javax.swing.JFrame {
     private JList<Note> jNotesList;
     private JScrollPane jScrollPane;
     private DefaultListModel<Note> listModel;
-    private JComboBox<String> jCategoryFilter;
     private String currentUser;
     
-    // Swipe animation variables
     private static final int SWIPE_THRESHOLD = 100;
     private int swipeStartX = -1;
     private Note swipedNote = null;
@@ -27,10 +25,9 @@ public class Home extends javax.swing.JFrame {
         this.currentUser = username;
         initComponents();
         loadNotes();
-        Main.setWindowSize(this, 400, 600);
+        Main.setWindowSize(this, 380, 596);
         Main.centerWindow(this);
         
-        // Initialize swipe animation timer
         swipeTimer = new Timer(10, e -> {
             if (isSwipingBack) {
                 swipeOffset += 10;
@@ -49,120 +46,125 @@ public class Home extends javax.swing.JFrame {
             jNotesList.repaint();
         });
     }
-    
+
+    // Custom rounded text field class
     class RoundedTextField extends JTextField {
-    private int cornerRadius = 20;
+        private int cornerRadius = 20;
 
-    public RoundedTextField(int columns) {
-        super(columns);
-        setOpaque(false);
-        setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+        public RoundedTextField(int columns) {
+            super(columns);
+            setOpaque(false);
+            setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(getBackground());
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), cornerRadius, cornerRadius);
+            super.paintComponent(g2);
+            g2.dispose();
+        }
+
+        @Override
+        protected void paintBorder(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(new Color(200, 200, 200));
+            g2.drawRoundRect(0, 0, getWidth()-1, getHeight()-1, cornerRadius, cornerRadius);
+            g2.dispose();
+        }
     }
 
-    @Override
-    protected void paintComponent(Graphics g) {
-        Graphics2D g2 = (Graphics2D) g.create();
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g2.setColor(getBackground());
-        g2.fillRoundRect(0, 0, getWidth(), getHeight(), cornerRadius, cornerRadius);
-        super.paintComponent(g2);
-        g2.dispose();
-    }
-
-    @Override
-    protected void paintBorder(Graphics g) {
-        Graphics2D g2 = (Graphics2D) g.create();
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g2.setColor(Color.LIGHT_GRAY);
-        g2.drawRoundRect(0, 0, getWidth()-1, getHeight()-1, cornerRadius, cornerRadius);
-        g2.dispose();
-    }
-}
-
-
+    // Initialize all UI components
     private void initComponents() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setTitle("Home - " + currentUser);
 
+        // Title Panel with buttons
+        JPanel titlePanel = new JPanel(new BorderLayout());
+        titlePanel.setBorder(new EmptyBorder(20, 20, 20, 20));
+        titlePanel.setBackground(Color.WHITE);
+
         // Title Label
         jTitleLabel = new JLabel("Welcome, " + currentUser);
         jTitleLabel.setFont(new Font("Arial", Font.BOLD, 24));
-        jTitleLabel.setBorder(new EmptyBorder(20, 20, 20, 20));
 
-        // Search Field with placeholder
+        // Button Panel for top-right icons
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        buttonPanel.setOpaque(false);
+
+        JButton jAddNoteButton = new JButton(new ImageIcon(getClass().getResource("/assets/write.png")));
+        styleNavigationButton(jAddNoteButton);
+        jAddNoteButton.addActionListener(e -> addNewNote());
+
+        JButton jSettingsButton = new JButton(new ImageIcon(getClass().getResource("/assets/profile-circle.png")));
+        styleNavigationButton(jSettingsButton);
+        jSettingsButton.addActionListener(e -> openSettings());
+
+        buttonPanel.add(jAddNoteButton);
+        buttonPanel.add(jSettingsButton);
+
+        titlePanel.add(jTitleLabel, BorderLayout.WEST);
+        titlePanel.add(buttonPanel, BorderLayout.EAST);
+
+        // Search Field
         jSearchField = new RoundedTextField(20);
-jSearchField.setForeground(new Color(150, 150, 150));
-jSearchField.setFont(new Font("Arial", Font.PLAIN, 14));
-jSearchField.setBackground(Color.WHITE);
-jSearchField.addFocusListener(new FocusAdapter() {
-    @Override
-    public void focusGained(FocusEvent e) {
-        if (jSearchField.getText().equals(" Search")) {
-            jSearchField.setText("");
-            jSearchField.setForeground(Color.BLACK);
-        }
-    }
-    @Override
-    public void focusLost(FocusEvent e) {
-        if (jSearchField.getText().isEmpty()) {
-            jSearchField.setText(" Search");
-            jSearchField.setForeground(new Color(150, 150, 150));
-        }
-    }
-});
-jSearchField.addKeyListener(new KeyAdapter() {
-    public void keyReleased(KeyEvent e) {
-        filterNotes();
-    }
-});
+        jSearchField.setForeground(new Color(150, 150, 150));
+        jSearchField.setFont(new Font("Arial", Font.PLAIN, 14));
+        jSearchField.setBackground(Color.WHITE);
+        jSearchField.setText(" Search");
+        jSearchField.setForeground(new Color(150, 150, 150));
 
-        // Category Filter
-        jCategoryFilter = new JComboBox<>();
-        jCategoryFilter.addItem("All Categories");
-        jCategoryFilter.setFont(new Font("Arial", Font.PLAIN, 14));
-        jCategoryFilter.addActionListener(e -> filterNotes());
+        jSearchField.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (jSearchField.getText().equals(" Search")) {
+                    jSearchField.setText("");
+                    jSearchField.setForeground(Color.BLACK);
+                }
+            }
 
-        // Filter Panel (matches note width)
-        JPanel filterPanel = new JPanel(new BorderLayout(10, 0));
-        filterPanel.setBorder(new EmptyBorder(0, 15, 0, 15)); // Matches note margins
-        filterPanel.add(jSearchField, BorderLayout.CENTER);
-        filterPanel.add(jCategoryFilter, BorderLayout.EAST);
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (jSearchField.getText().isEmpty()) {
+                    jSearchField.setForeground(new Color(150, 150, 150));
+                    jSearchField.setText(" Search");
+                }
+            }
+        });
+        jSearchField.addKeyListener(new KeyAdapter() {
+            public void keyReleased(KeyEvent e) {
+                filterNotes();
+            }
+        });
 
-        // Notes List with swipe animation
+        // Notes List
         listModel = new DefaultListModel<>();
         jNotesList = new JList<>(listModel) {
             @Override
             protected void paintComponent(Graphics g) {
-                // Paint the background first
                 g.setColor(getBackground());
                 g.fillRect(0, 0, getWidth(), getHeight());
                 
-                // Paint each cell with swipe animation
                 for (int i = 0; i < getModel().getSize(); i++) {
                     Rectangle cellBounds = getCellBounds(i, i);
                     if (cellBounds != null) {
                         Graphics cellGraphics = g.create(0, cellBounds.y, getWidth(), cellBounds.height);
                         Note note = getModel().getElementAt(i);
-                        
-                        // Apply swipe offset
                         int offset = (note == swipedNote) ? swipeOffset : 0;
                         
-                        // Paint delete area (red background)
                         if (offset < 0) {
                             int deleteWidth = Math.min(-offset, SWIPE_THRESHOLD);
                             Graphics2D g2d = (Graphics2D)cellGraphics.create();
                             g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                             g2d.setColor(new Color(255, 100, 100));
                             g2d.fillRoundRect(
-                                getWidth() - deleteWidth, 
-                                5, 
-                                deleteWidth, 
-                                cellBounds.height - 10, 
-                                15, 
-                                15
+                                getWidth() - deleteWidth, 5, deleteWidth, 
+                                cellBounds.height - 10, 15, 15
                             );
                             
-                            // Paint trash icon
                             ImageIcon trashIcon = new ImageIcon(getClass().getResource("/assets/trash.png"));
                             int iconX = getWidth() - deleteWidth/2 - trashIcon.getIconWidth()/2;
                             int iconY = cellBounds.height/2 - trashIcon.getIconHeight()/2;
@@ -170,7 +172,6 @@ jSearchField.addKeyListener(new KeyAdapter() {
                             g2d.dispose();
                         }
                         
-                        // Paint the cell content
                         cellGraphics.translate(offset, 0);
                         super.paintComponent(cellGraphics);
                         cellGraphics.dispose();
@@ -178,13 +179,13 @@ jSearchField.addKeyListener(new KeyAdapter() {
                 }
             }
         };
+        
         jNotesList.setBackground(Color.WHITE);
         jNotesList.setFont(new Font("Arial", Font.PLAIN, 16));
         jNotesList.setFixedCellHeight(60);
         jNotesList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         jNotesList.setCellRenderer(new NoteListCellRenderer());
         
-        // Mouse listeners for swipe
         jNotesList.addMouseMotionListener(new MouseMotionAdapter() {
             @Override
             public void mouseDragged(MouseEvent e) {
@@ -229,29 +230,8 @@ jSearchField.addKeyListener(new KeyAdapter() {
         });
 
         jScrollPane = new JScrollPane(jNotesList);
-        jScrollPane.setBorder(BorderFactory.createEmptyBorder());
-        jScrollPane.setViewportBorder(BorderFactory.createEmptyBorder());
-
-        // Bottom navigation buttons
-        JPanel buttonPanel = new JPanel(new GridLayout(1, 3, 10, 0));
-        buttonPanel.setBorder(new EmptyBorder(10, 20, 10, 20));
-        buttonPanel.setBackground(Color.WHITE);
-
-        JButton jDashboardButton = new JButton(new ImageIcon(getClass().getResource("/assets/dashboard.png")));
-        styleNavigationButton(jDashboardButton);
-        jDashboardButton.addActionListener(e -> showDashboard());
-
-        JButton jAddNoteButton = new JButton(new ImageIcon(getClass().getResource("/assets/message-add.png")));
-        styleNavigationButton(jAddNoteButton);
-        jAddNoteButton.addActionListener(e -> addNewNote());
-
-        JButton jSettingsButton = new JButton(new ImageIcon(getClass().getResource("/assets/profile-circle.png")));
-        styleNavigationButton(jSettingsButton);
-        jSettingsButton.addActionListener(e -> openSettings());
-
-        buttonPanel.add(jDashboardButton);
-        buttonPanel.add(jAddNoteButton);
-        buttonPanel.add(jSettingsButton);
+        jScrollPane.setBorder(null);
+        jScrollPane.setViewportBorder(null);
 
         // Main layout
         GroupLayout layout = new GroupLayout(getContentPane());
@@ -263,37 +243,39 @@ jSearchField.addKeyListener(new KeyAdapter() {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                    .addComponent(jTitleLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(filterPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jScrollPane)
-                    .addComponent(buttonPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(titlePanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(10)
+                        .addComponent(jSearchField, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGap(10))
+                    .addComponent(jScrollPane, GroupLayout.DEFAULT_SIZE, 376, Short.MAX_VALUE))
                 .addContainerGap())
         );
 
         layout.setVerticalGroup(
             layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jTitleLabel)
+                .addComponent(titlePanel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
                 .addGap(15)
-                .addComponent(filterPanel, GroupLayout.PREFERRED_SIZE, 45, GroupLayout.PREFERRED_SIZE)
+                .addComponent(jSearchField, GroupLayout.PREFERRED_SIZE, 40, GroupLayout.PREFERRED_SIZE)
                 .addGap(15)
                 .addComponent(jScrollPane, GroupLayout.DEFAULT_SIZE, 300, Short.MAX_VALUE)
-                .addGap(15)
-                .addComponent(buttonPanel, GroupLayout.PREFERRED_SIZE, 45, GroupLayout.PREFERRED_SIZE)
                 .addContainerGap()
         );
 
         pack();
     }
 
+    // Style navigation buttons
     private void styleNavigationButton(JButton button) {
-        button.setBorder(BorderFactory.createEmptyBorder());
+        button.setBorder(null);
         button.setContentAreaFilled(false);
         button.setFocusPainted(false);
         button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
     }
 
-    private void loadNotes() {
+    // Load notes from database
+     private void loadNotes() {
         listModel.clear();
         List<Note> notes = DatabaseUtil.getUserNotes(currentUser);
         if (notes != null) {
@@ -301,56 +283,32 @@ jSearchField.addKeyListener(new KeyAdapter() {
                 listModel.addElement(note);
             }
         }
-        updateCategoryFilter();
     }
 
-    private void updateCategoryFilter() {
-        String selected = (String) jCategoryFilter.getSelectedItem();
-        jCategoryFilter.removeAllItems();
-        jCategoryFilter.addItem("All Categories");
-
-        List<String> categories = DatabaseUtil.getCategories(currentUser);
-        if (categories != null) {
-            for (String category : categories) {
-                if (category != null) {
-                    jCategoryFilter.addItem(category);
-                }
-            }
-        }
-
-        if (selected != null && categories != null && categories.contains(selected)) {
-            jCategoryFilter.setSelectedItem(selected);
-        }
-    }
-
-    private void filterNotes() {
+    // Filter notes based on search text
+     private void filterNotes() {
         String searchText = jSearchField.getText().toLowerCase();
-        if (searchText.equals(" search...")) searchText = "";
-        
-        String selectedCategory = (String) jCategoryFilter.getSelectedItem();
+        if (searchText.equals(" search")) searchText = "";
 
         List<Note> allNotes = DatabaseUtil.getUserNotes(currentUser);
         listModel.clear();
 
-        for (Note note : allNotes) {
-            boolean matchesSearch = searchText.isEmpty() || 
-                                  note.getContent().toLowerCase().contains(searchText);
-
-            boolean matchesCategory = "All Categories".equals(selectedCategory) ||
-                                    (note.getCategory() != null && note.getCategory().equals(selectedCategory)) ||
-                                    (note.getCategory() == null && selectedCategory == null);
-
-            if (matchesSearch && matchesCategory) {
-                listModel.addElement(note);
+        if (allNotes != null) {
+            for (Note note : allNotes) {
+                if (searchText.isEmpty() || 
+                    note.getContent().toLowerCase().contains(searchText) ||
+                    (note.getCategory() != null && note.getCategory().toLowerCase().contains(searchText))) {
+                    listModel.addElement(note);
+                }
             }
         }
     }
 
+    // Handle note deletion confirmation
     private void confirmAndDeleteNote(Note note) {
         boolean success = DatabaseUtil.deleteNote(currentUser, note.getId());
         if (success) {
             listModel.removeElement(note);
-            updateCategoryFilter();
             swipeOffset = 0;
             swipedNote = null;
             jNotesList.repaint();
@@ -361,43 +319,42 @@ jSearchField.addKeyListener(new KeyAdapter() {
         }
     }
 
-    private void openNoteForEditing(Note note) {
+    // Open note for editing
+     private void openNoteForEditing(Note note) {
         AddNote addNote = new AddNote(note, currentUser);
         addNote.setSaveListener(updatedNote -> {
+            // Update the existing note in the list
             for (int i = 0; i < listModel.size(); i++) {
                 if (listModel.getElementAt(i).getId() == updatedNote.getId()) {
                     listModel.set(i, updatedNote);
                     break;
                 }
             }
-            updateCategoryFilter();
             filterNotes();
         });
         addNote.setVisible(true);
-        dispose();
     }
 
-    private void showDashboard() {
-        JOptionPane.showMessageDialog(this, "Dashboard will be implemented");
-    }
 
+    // Add new note
     private void addNewNote() {
         AddNote addNote = new AddNote(currentUser);
-        addNote.setSaveListener(note -> {
-            listModel.addElement(note);
-            updateCategoryFilter();
+        addNote.setSaveListener(newNote -> {
+            // Add the new note to the beginning of the list (matches DB ordering)
+            listModel.add(0, newNote);
             filterNotes();
+            jNotesList.ensureIndexIsVisible(0); // Scroll to show the new note
         });
         addNote.setVisible(true);
-        dispose();
     }
 
+    // Open settings window
     private void openSettings() {
         new Settings(currentUser).setVisible(true);
         dispose();
     }
 
-    // Custom cell renderer for notes
+    // Custom list cell renderer for notes
     private class NoteListCellRenderer extends DefaultListCellRenderer {
         @Override
         public Component getListCellRendererComponent(JList<?> list, Object value, int index, 
